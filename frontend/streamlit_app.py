@@ -2,7 +2,13 @@ import streamlit as st
 import os
 import sys
 import time
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Fix path for both local and Streamlit Cloud
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
+sys.path.insert(0, current_dir)
+sys.path.insert(0, "/mount/src/handbook-generator")
 
 from dotenv import load_dotenv
 from backend.pdf_processor import process_pdf
