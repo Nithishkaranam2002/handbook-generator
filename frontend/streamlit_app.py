@@ -75,6 +75,19 @@ with col1:
     if st.button("Process PDFs", type="primary", use_container_width=True):
         if uploaded_files:
             os.makedirs("uploads", exist_ok=True)
+
+            try:
+                supabase = get_supabase_client()
+                supabase.table("documents").delete().neq("id", 0).execute()
+                st.session_state.pdf_names = []
+                st.session_state.messages = []
+                st.session_state.last_handbook = ""
+                st.session_state.last_topic = ""
+                st.session_state.word_data = None
+                st.session_state.pdf_data = None
+            except Exception as e:
+                st.warning(f"Could not clear old data: {str(e)}")
+
             progress = st.progress(0)
             total = len(uploaded_files)
             new_uploads = []
@@ -113,7 +126,7 @@ with col1:
                 st.session_state.last_topic = ""
                 st.session_state.word_data = None
                 st.session_state.pdf_data = None
-                st.success("All documents cleared from database!")
+                st.success("All documents cleared!")
                 st.rerun()
             except Exception as e:
                 st.error(f"Error clearing: {str(e)}")
