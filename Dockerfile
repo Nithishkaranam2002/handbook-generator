@@ -9,9 +9,10 @@ COPY . .
 
 RUN mkdir -p uploads outputs
 
-EXPOSE 7860
-
 ENV GRADIO_SERVER_NAME="0.0.0.0"
 ENV GRADIO_SERVER_PORT="7860"
+ENV GRADIO_ANALYTICS_ENABLED="False"
+
+EXPOSE 7860
 
 CMD ["python", "app.py"]
