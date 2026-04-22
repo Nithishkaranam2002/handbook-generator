@@ -3,11 +3,7 @@ import os
 import sys
 import time
 
-# Fix path for both local and Streamlit Cloud
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
-sys.path.insert(0, current_dir)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.insert(0, "/mount/src/handbook-generator")
 
 from dotenv import load_dotenv
@@ -20,34 +16,18 @@ from backend.supabase_client import get_supabase_client
 
 load_dotenv()
 
-st.set_page_config(
-    page_title="AI Handbook Generator",
-    page_icon="📖",
-    layout="wide"
-)
+st.set_page_config(page_title="AI Handbook Generator", layout="wide")
 
 st.markdown("""
 <style>
-    .main-title { font-size: 2.5rem; font-weight: bold; }
-    .sub-title { color: gray; margin-bottom: 1rem; }
-    .stDownloadButton button { width: 100%; }
-    .stButton button { width: 100%; }
-    [data-testid="stChatMessage"] p {
-        font-size: 0.9rem !important;
-        font-weight: normal !important;
-        line-height: 1.6;
-    }
-    [data-testid="stChatMessage"] h1 { font-size: 1.1rem !important; }
-    [data-testid="stChatMessage"] h2 { font-size: 1rem !important; }
-    [data-testid="stChatMessage"] h3 { font-size: 0.95rem !important; }
-    [data-testid="stChatMessage"] strong {
-        font-size: 0.9rem !important;
-        font-weight: 600 !important;
-    }
-    [data-testid="stChatMessage"] li {
-        font-size: 0.9rem !important;
-        font-weight: normal !important;
-    }
+.main-title { font-size: 2.5rem; font-weight: bold; }
+.sub-title { color: gray; margin-bottom: 1rem; }
+[data-testid="stChatMessage"] p { font-size: 0.9rem !important; font-weight: normal !important; line-height: 1.6; }
+[data-testid="stChatMessage"] h1 { font-size: 1.1rem !important; }
+[data-testid="stChatMessage"] h2 { font-size: 1rem !important; }
+[data-testid="stChatMessage"] h3 { font-size: 0.95rem !important; }
+[data-testid="stChatMessage"] strong { font-size: 0.9rem !important; font-weight: 600 !important; }
+[data-testid="stChatMessage"] li { font-size: 0.9rem !important; font-weight: normal !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -81,7 +61,6 @@ with col1:
     if st.button("Process PDFs", type="primary", use_container_width=True):
         if uploaded_files:
             os.makedirs("uploads", exist_ok=True)
-
             try:
                 supabase = get_supabase_client()
                 supabase.table("documents").delete().neq("id", 0).execute()
@@ -102,15 +81,12 @@ with col1:
                 pdf_path = f"uploads/{uploaded_file.name}"
                 with open(pdf_path, "wb") as f:
                     f.write(uploaded_file.getbuffer())
-
                 with st.spinner(f"Processing {uploaded_file.name}..."):
                     chunks = process_pdf(pdf_path)
                     store_chunks(chunks, uploaded_file.name)
-
                 if uploaded_file.name not in st.session_state.pdf_names:
                     st.session_state.pdf_names.append(uploaded_file.name)
                     new_uploads.append(uploaded_file.name)
-
                 progress.progress((i + 1) / total)
 
             st.success(f"Successfully uploaded and indexed {len(new_uploads)} PDF(s)")
@@ -121,7 +97,6 @@ with col1:
         st.markdown("**Indexed documents:**")
         for name in st.session_state.pdf_names:
             st.markdown(f"- {name}")
-
         if st.button("Clear All Documents", use_container_width=True):
             try:
                 supabase = get_supabase_client()
@@ -161,7 +136,6 @@ with col1:
         st.markdown("### Download Last Handbook")
         st.markdown(f"**Topic:** {st.session_state.last_topic}")
         st.markdown(f"**Words:** {len(st.session_state.last_handbook.split())}")
-
         if st.session_state.word_data:
             st.download_button(
                 label="Download as Word Document",
@@ -171,7 +145,6 @@ with col1:
                 use_container_width=True,
                 key="sidebar_word_btn"
             )
-
         if st.session_state.md_data:
             st.download_button(
                 label="Download as Markdown",
@@ -218,13 +191,8 @@ with col2:
             st.markdown(prompt)
 
         handbook_keywords = [
-            "generate handbook",
-            "create handbook",
-            "make handbook",
-            "write handbook",
-            "handbook on",
-            "handbook about",
-            "handbook"
+            "generate handbook", "create handbook", "make handbook",
+            "write handbook", "handbook on", "handbook about", "handbook"
         ]
 
         is_handbook_request = any(kw in prompt.lower() for kw in handbook_keywords)
@@ -234,16 +202,12 @@ with col2:
             for kw in handbook_keywords:
                 topic = topic.replace(kw, "").strip()
 
-            vague_words = [
-                "this", "the", "my", "document", "documents",
-                "pdf", "file", "it", "about this", "about the", ""
-            ]
+            vague_words = ["this", "the", "my", "document", "documents", "pdf", "file", "it", "about this", "about the", ""]
 
             if not topic or topic in vague_words or len(topic.split()) <= 2:
                 with st.spinner("Auto detecting topic from your documents..."):
                     topic = detect_topic_from_pdf(
-                        st.session_state.pdf_names[0]
-                        if st.session_state.pdf_names else None
+                        st.session_state.pdf_names[0] if st.session_state.pdf_names else None
                     )
                 st.info(f"Auto detected topic: {topic}")
 
@@ -253,15 +217,13 @@ with col2:
 
             def update_progress(msg):
                 progress_steps[0] += 1
-                progress = min(progress_steps[0] / 13, 0.99)
-                progress_bar.progress(progress)
+                progress_bar.progress(min(progress_steps[0] / 13, 0.99))
                 status_text.text(msg)
 
             with st.spinner(f"Generating handbook about {topic} in {style} style. This takes 5 to 8 minutes..."):
                 handbook = generate_handbook(
                     topic,
-                    st.session_state.pdf_names[0]
-                    if st.session_state.pdf_names else None,
+                    st.session_state.pdf_names[0] if st.session_state.pdf_names else None,
                     style,
                     update_progress
                 )
@@ -273,7 +235,6 @@ with col2:
             st.session_state.last_topic = topic
 
             os.makedirs("outputs", exist_ok=True)
-
             word_path = export_to_word(handbook, topic)
             md_path = export_to_markdown(handbook, topic)
 
@@ -287,10 +248,8 @@ with col2:
 
             word_count = len(handbook.split())
             msg_key = str(int(time.time()))
-
             word_filename = f"handbook_{topic[:20].replace(' ', '_')}.docx"
             md_filename = f"handbook_{topic[:20].replace(' ', '_')}.md"
-
             preview = ' '.join(handbook.split()[:300])
 
             response_text = f"""Handbook generated successfully in **{style}** style.
@@ -327,10 +286,7 @@ Download the full handbook using the buttons below or from the left sidebar."""
                         key=f"md_chat_{msg_key}"
                     )
 
-            st.session_state.messages.append({
-                "role": "user",
-                "content": prompt
-            })
+            st.session_state.messages.append({"role": "user", "content": prompt})
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": response_text,
@@ -351,7 +307,6 @@ Download the full handbook using the buttons below or from the left sidebar."""
                         for r in results if r.get("metadata")
                     ]))
                     citation = f"\n\n**Sources referenced:** {', '.join(source_names)}" if source_names else ""
-
                     messages = [
                         {
                             "role": "system",
