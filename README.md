@@ -60,6 +60,7 @@ Informs the user what topic was detected
 Tech Stack
 ComponentTechnologyFrontendStreamlitLLMGPT-4o via OpenAI APIEmbeddingstext-embedding-3-smallVector DatabaseSupabase with pgvectorPDF ProcessingpdfplumberWord Exportpython-docxMarkdown ExportBuilt-in Python
 
+
 Project Structure
 handbook-generator/
 │
