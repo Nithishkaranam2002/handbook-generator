@@ -1,8 +1,8 @@
 ---
 title: AI Handbook Generator
 emoji: 📖
-colorFrom: orange
-colorTo: red
+colorFrom: red
+colorTo: blue
 sdk: gradio
 sdk_version: 4.0.0
 app_file: app.py
