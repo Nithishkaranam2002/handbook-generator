@@ -9,7 +9,7 @@ from backend.pdf_processor import process_pdf
 from backend.rag_engine import store_chunks, search_similar
 from backend.llm_client import chat
 from backend.handbook_generator import generate_handbook, detect_topic_from_pdf
-from backend.exporter import export_to_word, export_to_pdf
+from backend.exporter import export_to_word, export_to_markdown
 from backend.supabase_client import get_supabase_client
 
 load_dotenv()
@@ -58,8 +58,8 @@ if "last_topic" not in st.session_state:
     st.session_state.last_topic = ""
 if "word_data" not in st.session_state:
     st.session_state.word_data = None
-if "pdf_data" not in st.session_state:
-    st.session_state.pdf_data = None
+if "md_data" not in st.session_state:
+    st.session_state.md_data = None
 
 col1, col2 = st.columns([1, 2])
 
@@ -84,7 +84,7 @@ with col1:
                 st.session_state.last_handbook = ""
                 st.session_state.last_topic = ""
                 st.session_state.word_data = None
-                st.session_state.pdf_data = None
+                st.session_state.md_data = None
             except Exception as e:
                 st.warning(f"Could not clear old data: {str(e)}")
 
@@ -125,7 +125,7 @@ with col1:
                 st.session_state.last_handbook = ""
                 st.session_state.last_topic = ""
                 st.session_state.word_data = None
-                st.session_state.pdf_data = None
+                st.session_state.md_data = None
                 st.success("All documents cleared!")
                 st.rerun()
             except Exception as e:
@@ -166,14 +166,14 @@ with col1:
                 key="sidebar_word_btn"
             )
 
-        if st.session_state.pdf_data:
+        if st.session_state.md_data:
             st.download_button(
-                label="Download as PDF",
-                data=st.session_state.pdf_data,
-                file_name=f"handbook_{st.session_state.last_topic[:20].replace(' ', '_')}.pdf",
-                mime="application/pdf",
+                label="Download as Markdown",
+                data=st.session_state.md_data,
+                file_name=f"handbook_{st.session_state.last_topic[:20].replace(' ', '_')}.md",
+                mime="text/markdown",
                 use_container_width=True,
-                key="sidebar_pdf_btn"
+                key="sidebar_md_btn"
             )
 
 with col2:
@@ -183,7 +183,7 @@ with col2:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
             if message.get("word_data"):
-                col_w, col_p = st.columns(2)
+                col_w, col_m = st.columns(2)
                 with col_w:
                     st.download_button(
                         label="Download Word",
@@ -193,14 +193,14 @@ with col2:
                         use_container_width=True,
                         key=f"word_{message.get('key', 'default')}"
                     )
-                with col_p:
+                with col_m:
                     st.download_button(
-                        label="Download PDF",
-                        data=message["pdf_data"],
-                        file_name=message.get("pdf_filename", "handbook.pdf"),
-                        mime="application/pdf",
+                        label="Download Markdown",
+                        data=message["md_data"],
+                        file_name=message.get("md_filename", "handbook.md"),
+                        mime="text/markdown",
                         use_container_width=True,
-                        key=f"pdf_{message.get('key', 'default')}"
+                        key=f"md_{message.get('key', 'default')}"
                     )
 
     if st.button("Clear Chat", use_container_width=True):
@@ -269,21 +269,21 @@ with col2:
             os.makedirs("outputs", exist_ok=True)
 
             word_path = export_to_word(handbook, topic)
-            pdf_path = export_to_pdf(handbook, topic)
+            md_path = export_to_markdown(handbook, topic)
 
             with open(word_path, "rb") as f:
                 word_data = f.read()
-            with open(pdf_path, "rb") as f:
-                pdf_data = f.read()
+            with open(md_path, "r", encoding="utf-8") as f:
+                md_data = f.read()
 
             st.session_state.word_data = word_data
-            st.session_state.pdf_data = pdf_data
+            st.session_state.md_data = md_data
 
             word_count = len(handbook.split())
             msg_key = str(int(time.time()))
 
             word_filename = f"handbook_{topic[:20].replace(' ', '_')}.docx"
-            pdf_filename = f"handbook_{topic[:20].replace(' ', '_')}.pdf"
+            md_filename = f"handbook_{topic[:20].replace(' ', '_')}.md"
 
             preview = ' '.join(handbook.split()[:300])
 
@@ -301,7 +301,7 @@ Download the full handbook using the buttons below or from the left sidebar."""
 
             with st.chat_message("assistant"):
                 st.markdown(response_text)
-                col_w, col_p = st.columns(2)
+                col_w, col_m = st.columns(2)
                 with col_w:
                     st.download_button(
                         label="Download Word Document",
@@ -311,14 +311,14 @@ Download the full handbook using the buttons below or from the left sidebar."""
                         use_container_width=True,
                         key=f"word_chat_{msg_key}"
                     )
-                with col_p:
+                with col_m:
                     st.download_button(
-                        label="Download PDF",
-                        data=pdf_data,
-                        file_name=pdf_filename,
-                        mime="application/pdf",
+                        label="Download Markdown",
+                        data=md_data,
+                        file_name=md_filename,
+                        mime="text/markdown",
                         use_container_width=True,
-                        key=f"pdf_chat_{msg_key}"
+                        key=f"md_chat_{msg_key}"
                     )
 
             st.session_state.messages.append({
@@ -329,9 +329,9 @@ Download the full handbook using the buttons below or from the left sidebar."""
                 "role": "assistant",
                 "content": response_text,
                 "word_data": word_data,
-                "pdf_data": pdf_data,
+                "md_data": md_data,
                 "word_filename": word_filename,
-                "pdf_filename": pdf_filename,
+                "md_filename": md_filename,
                 "key": msg_key
             })
 
