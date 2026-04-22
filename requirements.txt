@@ -1,0 +1,7 @@
+gradio
+pdfplumber
+supabase
+python-dotenv
+openai
+fpdf2
+python-docx
