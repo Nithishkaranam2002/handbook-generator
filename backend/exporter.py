@@ -1,7 +1,7 @@
 import os
 from fpdf import FPDF
 from docx import Document
-from docx.shared import Inches, Pt
+from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 
@@ -47,26 +47,37 @@ def export_to_pdf(handbook_text: str, topic: str) -> str:
         if not line:
             pdf.ln(4)
             continue
+
+        clean_line = line.encode("latin-1", errors="replace").decode("latin-1")
+
         if line.startswith("# "):
             pdf.set_font("Helvetica", "B", 18)
-            pdf.multi_cell(0, 10, line[2:])
+            try:
+                pdf.multi_cell(0, 10, clean_line[2:])
+            except Exception:
+                pass
             pdf.ln(4)
             pdf.set_font("Helvetica", size=12)
         elif line.startswith("## "):
             pdf.set_font("Helvetica", "B", 15)
-            pdf.multi_cell(0, 8, line[3:])
+            try:
+                pdf.multi_cell(0, 8, clean_line[3:])
+            except Exception:
+                pass
             pdf.ln(3)
             pdf.set_font("Helvetica", size=12)
         elif line.startswith("### "):
             pdf.set_font("Helvetica", "B", 13)
-            pdf.multi_cell(0, 7, line[4:])
+            try:
+                pdf.multi_cell(0, 7, clean_line[4:])
+            except Exception:
+                pass
             pdf.ln(2)
             pdf.set_font("Helvetica", size=12)
         elif line.startswith("---"):
             pdf.ln(2)
         else:
             try:
-                clean_line = line.encode("latin-1", errors="replace").decode("latin-1")
                 pdf.multi_cell(0, 7, clean_line)
             except Exception:
                 pass
