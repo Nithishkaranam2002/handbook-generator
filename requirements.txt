@@ -1,7 +1,8 @@
-gradio
+gradio==4.44.0
 pdfplumber
 supabase
 python-dotenv
 openai
 fpdf2
 python-docx
+pydub==0.25.1
